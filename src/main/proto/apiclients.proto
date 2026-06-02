@@ -1,0 +1,22 @@
+syntax = "proto3";
+
+option java_package = "tgb.cryptoexchange.grpc.generated";
+option java_multiple_files = true;
+
+import "google/protobuf/empty.proto";
+import "google/protobuf/wrappers.proto";
+import "google/protobuf/field_mask.proto";
+import "google/protobuf/timestamp.proto";
+import "buf/validate/validate.proto";
+
+service SecurityService {
+
+  /**
+    * Метод выдачи публичного ключа для валидации JWT.
+    */
+  rpc GetPublicKey (google.protobuf.Empty) returns (GetPublicJWTKeyResponseGrpc);
+}
+
+message GetPublicJWTKeyResponseGrpc{
+  string jwt_key = 1;
+}

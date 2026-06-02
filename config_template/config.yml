@@ -1,0 +1,9 @@
+spring:
+  grpc:
+    server:
+      host:
+      port:
+    client:
+      channels:
+        api-clients:
+          address: ""
