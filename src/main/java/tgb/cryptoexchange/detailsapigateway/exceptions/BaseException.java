@@ -6,7 +6,7 @@ import lombok.Getter;
 import static com.google.rpc.Code.INTERNAL;
 
 @Getter
-public class BaseException extends RuntimeException implements CustomException {
+public class BaseException extends RuntimeException {
 
     private final Code errorCode;
 
