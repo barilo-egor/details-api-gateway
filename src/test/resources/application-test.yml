@@ -1,0 +1,24 @@
+spring:
+  grpc:
+    client:
+      channels:
+        api-clients:
+          address: "static://api-clients:9090"
+  cloud:
+    gateway:
+      server:
+        webflux:
+          httpclient:
+            connect-timeout: 2000
+            response-timeout: 5000
+          routes:
+            - id: clients-login-route
+              uri: ${app.webclient.base-url}
+              predicates:
+                - Path=/api-clients/login
+            - id: billing-secured-route
+              uri: ${app.webclient.base-url}
+              predicates:
+                - Path=/billing/**
+              filters:
+                - JwtAuthFilter

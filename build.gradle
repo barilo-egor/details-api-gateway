@@ -29,18 +29,11 @@ repositories {
 
 
 dependencies {
-    implementation 'org.springframework.boot:spring-boot-starter-web'
     implementation 'org.springframework.boot:spring-boot-starter-webflux'
     implementation 'org.springframework.boot:spring-boot-starter-actuator'
-    implementation 'org.springframework.boot:spring-boot-starter-kafka'
 
     implementation 'org.springframework.cloud:spring-cloud-starter-gateway-server-webflux'
 
-
-    implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:3.0.0'
-
-    implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
-    runtimeOnly 'com.mysql:mysql-connector-j'
 
     implementation platform("org.springframework.grpc:spring-grpc-dependencies:1.0.3")
     implementation 'org.springframework.grpc:spring-grpc-spring-boot-starter'
@@ -60,19 +53,14 @@ dependencies {
     annotationProcessor 'org.projectlombok:lombok'
     compileOnly 'jakarta.annotation:jakarta.annotation-api:3.0.0'
 
-
-    testImplementation "org.springframework.boot:spring-boot-starter-flyway"
-    testImplementation "org.flywaydb:flyway-mysql"
+    testImplementation 'org.wiremock.integrations:wiremock-spring-boot:4.2.1'
+    testImplementation 'org.springframework.boot:spring-boot-webtestclient'
     testImplementation "org.springframework.boot:spring-boot-starter-test"
-    testImplementation "org.springframework.boot:spring-boot-starter-data-jpa-test"
     testImplementation 'org.springframework.grpc:spring-grpc-test'
     testImplementation 'io.grpc:grpc-testing'
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
-    testImplementation 'org.springframework.kafka:spring-kafka-test'
 
     testImplementation "org.testcontainers:junit-jupiter:1.21.4"
-    testImplementation "org.testcontainers:kafka:1.21.4"
-    testImplementation "org.testcontainers:mysql:1.21.4"
     testImplementation "org.assertj:assertj-core:3.27.7"
     testImplementation 'io.projectreactor:reactor-test'
 }
