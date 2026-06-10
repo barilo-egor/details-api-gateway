@@ -31,6 +31,9 @@ public class ClientsSecurityGrpcService {
             listenableFuture.addListener(() -> {
                 try {
                     completableFuture.complete(listenableFuture.get());
+                } catch (InterruptedException e) {
+                    completableFuture.completeExceptionally(e);
+                    Thread.currentThread().interrupt();
                 } catch (Exception e) {
                     completableFuture.completeExceptionally(e.getCause() != null ? e.getCause() : e);
                 }
