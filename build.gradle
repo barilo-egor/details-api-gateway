@@ -109,3 +109,11 @@ tasks.withType(JavaCompile).configureEach {
 test {
     systemProperty "file.encoding", "UTF-8"
 }
+
+tasks.jar {
+    archiveFileName = "details-api-gateway.jar"
+}
+
+bootJar {
+    archiveFileName = 'details-api-gateway.jar'
+}
