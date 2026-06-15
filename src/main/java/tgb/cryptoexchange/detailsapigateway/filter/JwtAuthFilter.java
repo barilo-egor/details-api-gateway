@@ -1,5 +1,6 @@
 package tgb.cryptoexchange.detailsapigateway.filter;
 
+import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.MalformedJwtException;
@@ -72,7 +73,8 @@ public class JwtAuthFilter extends AbstractGatewayFilterFactory<Object> {
             String authHeader = request.getHeaders().getFirst(HttpHeaders.AUTHORIZATION);
 
             if (authHeader == null || !authHeader.startsWith("Bearer ")) {
-                log.warn("Валидация провалена: Отсутствует или некорректен заголовок Authorization для пути: {}", request.getPath());
+                log.warn("Валидация провалена: Отсутствует или некорректен заголовок Authorization для пути: {}",
+                        request.getPath());
                 return onError(exchange, "Missing or invalid Authorization header");
             }
 
@@ -81,7 +83,19 @@ public class JwtAuthFilter extends AbstractGatewayFilterFactory<Object> {
             return publicKeyCache
                     .flatMap(publicKey -> validateToken(token, publicKey)
                             .subscribeOn(Schedulers.boundedElastic()))
-                    .flatMap(isValid -> chain.filter(exchange))
+                    .flatMap(claims -> {
+                        Integer orderTimeout = claims.get("ordexp", Integer.class);
+
+                        if (orderTimeout != null) {
+                            ServerHttpRequest mutatedRequest = exchange.getRequest().mutate()
+                                    .header("X-Order-Timeout", String.valueOf(orderTimeout))
+                                    .build();
+
+                            return chain.filter(exchange.mutate().request(mutatedRequest).build());
+                        }
+
+                        return chain.filter(exchange);
+                    })
                     .onErrorResume(error -> {
                         logValidationError(error);
                         String clientMessage = getClientMessage(error);
@@ -101,27 +115,28 @@ public class JwtAuthFilter extends AbstractGatewayFilterFactory<Object> {
 
     private void logValidationError(Throwable error) {
         switch (error) {
-            case ExpiredJwtException expiredEx ->
-                    log.error("Валидация JWT провалена: Токен просрочен. Время истечения:", expiredEx);
-            case SignatureException signatureException ->
-                    log.error("Валидация JWT провалена: Неверная подпись токена. Ключ шлюза не совпадает с приватным ключом api-clients.", signatureException);
-            case MalformedJwtException malformedJwtException ->
-                    log.error("Валидация JWT провалена: Деформированный или поврежденный JWT токен.", malformedJwtException);
-            case IllegalArgumentException illegalArgumentException ->
-                    log.error("Критическая ошибка парсинга: Публичный ключ или токен имеют неверный формат кодирования.", illegalArgumentException);
-            default ->
-                    log.error("Ошибка в цепочке безопасности шлюза (gRPC или парсинг ключа): {}", error.getMessage(), error);
+        case ExpiredJwtException expiredEx ->
+                log.error("Валидация JWT провалена: Токен просрочен. Время истечения:", expiredEx);
+        case SignatureException signatureException -> log.error(
+                "Валидация JWT провалена: Неверная подпись токена. Ключ шлюза не совпадает с приватным ключом api-clients.",
+                signatureException);
+        case MalformedJwtException malformedJwtException ->
+                log.error("Валидация JWT провалена: Деформированный или поврежденный JWT токен.",
+                        malformedJwtException);
+        case IllegalArgumentException illegalArgumentException ->
+                log.error("Критическая ошибка парсинга: Публичный ключ или токен имеют неверный формат кодирования.",
+                        illegalArgumentException);
+        default -> log.error("Ошибка в цепочке безопасности шлюза (gRPC или парсинг ключа): {}", error.getMessage(),
+                error);
         }
     }
 
-    private Mono<Boolean> validateToken(String token, PublicKey publicKey) {
-        return Mono.fromCallable(() -> {
-            Jwts.parser()
-                    .verifyWith(publicKey)
-                    .build()
-                    .parseSignedClaims(token);
-            return true;
-        });
+    private Mono<Claims> validateToken(String token, PublicKey publicKey) {
+        return Mono.fromCallable(() -> Jwts.parser()
+                .verifyWith(publicKey)
+                .build()
+                .parseSignedClaims(token)
+                .getPayload());
     }
 
     private Mono<Void> onError(ServerWebExchange exchange, String message) {
@@ -147,6 +162,6 @@ public class JwtAuthFilter extends AbstractGatewayFilterFactory<Object> {
             }
         });
 
-
     }
+
 }
